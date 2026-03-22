@@ -1,0 +1,29 @@
+panel_oblast_month.csv — metadata
+==================================================
+Rows:    144
+Oblasts: ['Chernihiv', 'Kharkiv', 'Sumy']
+Months:  2021-01 – 2024-12
+
+Columns:
+  oblast                               NaN=   0  dtype=str
+  month                                NaN=   0  dtype=str
+  year                                 NaN=   0  dtype=int64
+  month_num                            NaN=   0  dtype=int64
+  post_invasion                        NaN=   0  dtype=int64
+  occupation_phase                     NaN=   0  dtype=int64
+  idp_present                          NaN=   0  dtype=int64
+  edr_new_companies_nat                NaN=   0  dtype=int64
+  edr_new_fops_nat                     NaN=   0  dtype=int64
+  conflict_events                      NaN= 144  dtype=float64
+  fatalities                           NaN= 144  dtype=float64
+  shelling_events                      NaN= 144  dtype=float64
+
+Data sources:
+  idp_present            : HDX/IOM DTM (Feb 2022–Jan 2026; pre-invasion → 0)
+  edr_new_companies_nat  : EDR data.gov.ua NATIONAL (no oblast filter available)
+  edr_new_fops_nat       : EDR data.gov.ua NATIONAL
+  conflict_events et al. : ACLED — PENDING (run 01_acled.py once API activated)
+
+NOT in panel (snapshot only):
+  Work.ua job counts     : data/clean/work_ua/work_ua_region_month.csv
+  Robota.ua job counts   : data/clean/robota_ua/robota_ua_region_month.csv
