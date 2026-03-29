@@ -76,9 +76,57 @@ ROBOTA_UA_REGION_SLUGS = {
     "Чернігівська": "chernihivska-oblast",
 }
 
+# ── Jooble ────────────────────────────────────────────────────────────────────
+# REST API: POST https://jooble.org/api/{api_key}
+# Free key registration: https://jooble.org/api/about
+JOOBLE_API_BASE = "https://jooble.org/api"
+
+# Ukrainian oblast names as understood by the Jooble location parameter
+JOOBLE_OBLAST_LOCATIONS = {
+    "Харківська": "Харківська область",
+    "Сумська":    "Сумська область",
+    "Чернігівська": "Чернігівська область",
+}
+
+# Wayback Machine CDX endpoint
+WAYBACK_CDX_URL = "https://web.archive.org/cdx/search/cdx"
+# Known Jooble all-Ukraine page archived in Wayback Machine
+JOOBLE_SEARCH_URL = "https://ua.jooble.org/SearchResult"
+
+CLEAN_JOOBLE = CLEAN_DIR / "jooble"
+
 # ── HDX / CKAN API ────────────────────────────────────────────────────────────
 HDX_API_BASE = "https://data.humdata.org/api/3"
 HDX_SEARCH_TERMS = [
     "IOM DTM Ukraine displacement",
     "UNHCR Ukraine displacement",
 ]
+
+# ── LUN.ua Statistics ─────────────────────────────────────────────────────────
+# Real-estate statistics at https://lun.ua/stat/
+# City IDs discovered via network inspection of the stat sub-site.
+LUN_STAT_API  = "https://lun.ua/stat/api/data"
+LUN_STAT_BASE = "https://lun.ua/stat"
+
+# cityId maps to the major city (not the whole oblast);
+# the city is the primary data unit on lun.ua stat pages.
+LUN_CITY_IDS = {
+    "Харківська":   120,   # Kharkiv
+    "Сумська":      118,   # Sumy
+    "Чернігівська": 125,   # Chernihiv
+}
+
+LUN_CITY_SLUGS = {
+    "Харківська":   "kharkiv",
+    "Сумська":      "sumy",
+    "Чернігівська": "chernihiv",
+}
+
+# contractTypeId values (from API reverse-engineering):
+#   1 = primary market (new construction) sale prices
+#   2 = rental prices (UAH/month per apartment)
+LUN_CONTRACT_SALE   = 1
+LUN_CONTRACT_RENTAL = 2
+
+CLEAN_LUN = CLEAN_DIR / "lun_ua"
+RAW_LUN   = RAW_DIR   / "lun_ua"
