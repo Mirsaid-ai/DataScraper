@@ -17,3 +17,8 @@ data/raw/hdx_displacement/
 
 # Claude internal state
 .claude/
+.cursor/
+
+# Markdown files (except data collection report)
+*.md
+!data_collection_report.md

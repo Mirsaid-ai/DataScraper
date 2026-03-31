@@ -2,7 +2,7 @@
 
 **Project:** Economic impacts of the 2022 Russian occupation in Sumy, Chernihiv, and Kharkiv oblasts
 **Panel target:** Oblast × month, Jan 2021–Dec 2024 (3 oblasts × 48 months = 144 rows)
-**Date:** March 2026 (updated 28 March 2026)
+**Date:** March 2026 (updated 30 March 2026)
 
 ---
 
@@ -282,21 +282,227 @@ https://lun.ua/stat/rent/{slug}       ← rental stats
 
 ---
 
+## 9. `acled_work_imo.xlsx` / `acled_work_imo_inner_join.xlsx` — Class Pre-Merged Panel
+
+**File location:** `Existing Class Datasets/0 _ Unprocessed datasets/`
+
+**What it is:**
+A class-provided pre-merged panel combining four data sources into a single long-format file at the **oblast × sector × month** grain. Two versions exist:
+
+- `acled_work_imo.xlsx` — **left join**: 34,800 rows × 58 columns. All salary/job-posting observations retained even where ACLED data is absent. Covers Jan 2021–Dec 2024, all 25 Ukrainian oblasts, 29 job-market sectors.
+- `acled_work_imo_inner_join.xlsx` — **inner join**: 19,807 rows × 58 columns. Only months/oblast combinations where ACLED and labor data both exist. Runs Jun 2022–Dec 2024; drops Luhansk and Crimea (no labor data). Pre-invasion baseline is entirely absent.
+
+**Column groups:**
+
+| Group | Columns | Source |
+|-------|---------|--------|
+| Labor market | `Job Salary` (UAH), `Resume Salary` (UAH), `rate` (UAH/USD), `Job Salary, USD`, `Resume Salary, USD` | robota.ua/work.ua (via instructor) |
+| Job/resume postings | `Job postings tot`, `Job postings new`, `Resume postings tot`, `Resume postings new` | robota.ua (historical totals) |
+| Conflict — disorder type | `disorder_type_*` (3 cols) | ACLED |
+| Conflict — event type | `event_type_*` (6 cols) | ACLED |
+| Conflict — sub-event type | `sub_event_type_*` (23 cols) | ACLED |
+| Conflict — summary | `fatalities`, `civilian_targeting`, `tot_events`, `military_event` | ACLED |
+| Displacement | `Recorded IDP Arrivals` | IOM DTM |
+| Metadata | `City`, `Category`, `Date`, `admin1`, `Y`, `M`, `Oblast`, `Month-Year`, `Month-Year End` | — |
+
+**Coverage for the three target oblasts:**
+All three (Kharkiv, Sumy, Chernihiv) have complete 48-month × 29-category coverage (1,392 rows each = 48 months × 29 sectors) in the left-join version.
+
+**Key finding — historical job posting counts:**
+Unlike the project's own scrapers (§3–§3), which could only retrieve current snapshots, this class dataset includes **historical monthly job posting totals and new postings** by oblast and sector from robota.ua, covering the full Jan 2021–Dec 2024 range. For example, Kharkiv IT sector: 801 total postings and 489 new postings in January 2022.
+
+**Assessment for the panel:**
+
+- **✅ Fully usable — job/resume posting counts and salaries by sector:** The left-join file provides the complete 48-month pre/post baseline for labor demand and wage analysis. This supersedes the "snapshot-only" conclusion from §3 (robota.ua/work.ua). Variables `Job postings tot`, `Job postings new`, `Job Salary, USD`, `Resume Salary, USD` by sector can be aggregated to oblast × month for panel merge.
+- **⚠️ Partially usable — inner-join version:** Excludes pre-invasion months entirely (starts Jun 2022). Only useful for post-war descriptive regressions or robustness checks. Do not use as the primary dataset.
+- **⚠️ IDP Arrivals column:** `Recorded IDP Arrivals` is repeated identically for every sector row within the same oblast-month (as expected for a left join). Useful but already covered by the HDX IOM DTM scrape (§6), which has finer monthly resolution.
+- **❌ ACLED columns — inferior to bulk xlsx:** The ACLED variables run from 2022-07 only (inner join) or have many NaNs in 2021 (left join), making them inferior to the bulk xlsx source in §1 which starts Jan 2021.
+
+**Status:** In hand. Extract and aggregate labor market columns (`Job postings tot`, `Job postings new`, `Job Salary, USD`, `Resume Salary, USD`) to oblast × month using `acled_work_imo.xlsx` (left-join version); merge into panel as new outcome/control variables.
+
+---
+
+## 10. `primary market data.xlsx` — Primary Market Housing Prices (Extended History)
+
+**File location:** `Existing Class Datasets/0 _ Unprocessed datasets/`
+**Shape:** 1,272 rows × 4 columns: `city`, `date`, `ave_prim_buy, usd/m2`
+
+**What it is:**
+Monthly average primary-market housing prices in USD/m² for 22 Ukrainian cities. This is the same underlying LUN.ua data described in §8, but the class-provided file **extends the history back to January 2014** — versus the LUN.ua API scrape in §8, which begins in January 2021.
+
+**Coverage:**
+- Date range: Jan 2014 – Jun 2025 (138 months for Kyiv; 54 months for most other cities, reflecting when LUN.ua started tracking them)
+- Cities: all 22 major Ukrainian cities, including Kharkiv, Sumy, and Chernihiv
+- For the three target oblasts: full coverage from the point each city entered the LUN.ua dataset through Jun 2025
+
+**Why this matters:**
+The 2014–2020 history (pre-panel) enables **parallel-trends validation** and Annex plots showing housing price trajectories before the 2022 invasion. It can also support a 2014-Crimea-annexation placebo test. The LUN.ua API scraper in §8 does not retrieve data before Jan 2021 — this file fills that gap.
+
+**Relationship to §8:**
+The Jan 2021–Jun 2025 portion of this file duplicates the LUN.ua primary market scrape in §8 (same source, same units). The class file does not include the class-breakdown (economy/comfort/business/premium) — only the all-class average `ave_prim_buy, usd/m2`. Use the LUN.ua scrape from §8 for class-level granularity; use this class file for the pre-2021 baseline.
+
+**Status:** In hand. For the main panel (Jan 2021–Dec 2024), the §8 LUN.ua data is preferred (richer). For pre-war trend plots and placebo tests, merge this file's 2014–2020 rows.
+
+---
+
+## 11. `secondary market data.xlsx` — Secondary Market Housing Prices + Rental
+
+**File location:** `Existing Class Datasets/0 _ Unprocessed datasets/`
+**Shape:** 586 rows × 12 columns
+
+**What it is:**
+Monthly secondary (resale) market housing prices and rental prices by room count for 22 Ukrainian cities, sourced from LUN.ua.
+
+**Columns:**
+
+| Column | Description |
+|--------|-------------|
+| `ave_sec_price_1/2/3_buy, usd/m2` | Secondary market **listed** price per m² by room count (1/2/3-bed) |
+| `ave_sold_price_1/2/3_buy, usd/m2` | Secondary market **sold** price per m² by room count |
+| `ave_price_1/2/3_rent, usd/m2` | Monthly **rental** price per m² by room count |
+
+**Coverage:**
+- Date range: May 2023 – Jul 2025 (27 months for most cities, 20 for a few)
+- All three target oblasts: complete 27 months each (May 2023–Jul 2025)
+
+**Assessment for the panel:**
+This confirms and slightly extends the secondary market data noted in §8 (LUN.ua `lun_flat_price_history.csv`). The class file runs to Jul 2025 vs. Dec 2024 in the scraped version, and explicitly separates **listed vs. sold** prices — the `ave_sold_price` columns are the transaction-price series, which is more economically meaningful than list prices.
+
+The fundamental limitation noted in §8 remains: no pre-war baseline (starts May 2023 only). The secondary market data cannot serve as a primary DID outcome variable due to missing 2021–2022 observations. It is usable for post-war cross-sectional analysis or as supplementary descriptives.
+
+**Status:** In hand. The `ave_sold_price_*_buy` columns are the most credible secondary market series available. Can be added to the panel for the 2023–2024 window as supplementary outcome variables.
+
+---
+
+## 12. SSSU Consumer Prices — Oblast-Level CPI (Ukrstat)
+
+**File:** `Existing Class Datasets/0 _ Unprocessed datasets/dataset_2025-09-18T19_53_38.610113535Z_DEFAULT_INTEGRATION_SSSU_DF_PRICE_CHANGE_CONSUMER_GOODS_SERVICE_LATEST.xlsx`
+**Shape:** 2,446 rows × 461 columns
+**Source:** State Statistics Service of Ukraine (SSSU / Ukrstat), via the official SDMX data portal
+
+**What it is:**
+A wide-format panel of Ukrainian consumer price statistics across three indicator types:
+- `Average consumer prices for goods (services)` — price level in UAH per unit (kg, pack, etc.)
+- `Consumer price indices` — month-on-month and year-on-year CPI indices
+- `Core inflation` — core inflation indices
+
+**Geographic coverage:**
+28 regions including all three target oblasts (**Kharkivska, Sumska, Chernihivska**) plus national Ukraine and Kyiv city. Crimea and Sevastopol are present in the schema but excluded from post-2014 data per official notes.
+
+**Temporal coverage:**
+Columns span 1991 through 2025-M08. For most product series, data begins from 2017 (UAH-denominated prices). Monthly granularity from 2017-M01 onward, with 2,272 non-null series in 2021-M01 and 2,245 in 2022-M02.
+
+**Why this matters:**
+The Fulldata dataset (§7) noted that price-level data was "present only for Sumska" for the target oblasts — Kharkiv and Chernihiv were absent. This SSSU file fills that gap: **oblast-level consumer prices are available for all three target oblasts** from 2017 onward, covering the full 48-month panel period (Jan 2021–Dec 2024). This enables:
+- A regional **price-level control variable** (e.g., food basket price in UAH) for each oblast-month
+- Identification of war-driven inflation spikes in conflict-affected vs. less-affected oblasts
+- Oblast-specific deflators for converting nominal salary variables to real terms
+
+**Format note:**
+The file is in wide format (one row per product × region × indicator). To use in the panel, melt to long format, filter to `2021-M01` through `2024-M12` columns and the three target oblasts, then aggregate or select representative price series (e.g., food basket components).
+
+**Key data note from SSSU:**
+Post-2022 figures exclude temporarily occupied territories. This is appropriate for this project since the panel tracks government-controlled portions of oblasts.
+
+**Status:** In hand. Highly valuable — this is the **only source with oblast-level price data for all three target oblasts** across the full panel period. Recommended extraction: food basket price index for Kharkivska, Sumska, Chernihivska, 2021-M01–2024-M12, to serve as a cost-of-living outcome variable and deflator.
+
+---
+
+## 13. openbudget.gov.ua — Hromada-Level PIT Revenue (Primary Outcome Variable)
+
+**What we wanted:**
+Monthly Personal Income Tax (PIT / ПДФО) revenue for all hromadas in Kharkiv, Sumy, and Chernihiv oblasts, 2021–2024, as the primary outcome variable for the Spatial RDD.
+
+**What we got:**
+Complete monthly PIT revenue for all ~170 hromadas in the 3 target oblasts, 2021–2024. Data is at the hromada budget level, reported monthly (general fund only).
+
+**Source and access method:**
+
+The Open Budget portal (`openbudget.gov.ua`) is operated by Ukraine's State Treasury Service and exposes a public REST API documented in Swagger UI at `https://api.openbudget.gov.ua/swagger-ui.html`.
+
+The key endpoint:
+```
+GET https://api.openbudget.gov.ua/api/public/localBudgetData
+  ?budgetCode=<hromada budget code>
+  &budgetItem=INCOMES
+  &period=MONTH
+  &year=<YYYY>
+```
+Returns: CSV (semicolon-delimited, UTF-8 despite header claiming windows-1251) with columns:
+`REP_PERIOD | FUND_TYP | COD_BUDGET | COD_INCO | NAME_INC | ZAT_AMT | PLANS_AMT | FAKT_AMT`
+
+**PIT income codes included in aggregation (all sub-codes of 11010000):**
+- `11010100` — PIT withheld by tax agents from salary income (largest sub-code, ~75% of total)
+- `11010200` — PIT from military service pay
+- `11010400` — PIT from other income (non-salary, e.g. dividends, rental)
+- `11010500` — PIT from investment income
+- `110106xx` — PIT from self-employed / FOP income
+
+Only general fund rows (`FUND_TYP = 'C'`) are included. `FAKT_AMT` (actual execution in UAH) is summed per month.
+
+**Budget code discovery:**
+
+Hromada budget codes were obtained from the `/items/BUDG` dictionary endpoint (~180 MB JSON, 217,072 entries). This dictionary is filtered to:
+- KATOTTG codes starting with `UA59` (Sumy), `UA63` (Kharkiv), `UA74` (Chernihiv)
+- Budget sign `signBudg` containing `(g)` — identifies hromada-level self-governance budgets
+
+**Key finding — budget codes by year:**
+
+The BUDG dictionary only contains codes from 2022 onward. However, querying the API with a 2022 budget code and `year=2021` returns 2021 data successfully. The budget codes changed format between 2021-2022 and 2023-2024 (11-digit codes in 2022, 10-digit in 2023+) but represent the same hromada jurisdictions.
+
+Result: 328 unique budget codes covering the 3 oblasts (each hromada has ~2 codes: one for 2021-2022, one for 2023-2024):
+- Sumy Oblast: 102 unique budget codes (~51 hromadas × 2 code formats)
+- Kharkiv Oblast: 112 unique budget codes (~56 hromadas × 2)
+- Chernihiv Oblast: 114 unique budget codes (~57 hromadas × 2)
+
+**War signal — example validation (Чупахівська hromada, Sumy Oblast):**
+
+| Year | Annual PIT (UAH) | vs 2021 |
+|------|-----------------|---------|
+| 2021 | 58.05M | baseline |
+| 2022 | 50.40M | −13% (occupation year) |
+| 2023 | 81.69M | +41% (recovery) |
+| 2024 | 88.91M | +53% (continued recovery) |
+
+This pre/post pattern is exactly what the RDD will quantify by comparing hromadas near the occupation boundary.
+
+**What happened / problems:**
+
+1. The portal's main page and Swagger UI are blocked at HTTP 403 from automated scrapers without a browser-like User-Agent. Adding a Chrome User-Agent and Referer header resolves this — no authentication token required.
+
+2. The `/v2/api-docs?group=v1.0` endpoint (discovered via `/swagger-resources`) reveals only 9 endpoints; the key one is `/api/public/localBudgetData`.
+
+3. The BUDG dictionary is ~180 MB and takes ~2 minutes to download. It is cached locally at `data/raw/_cache/openbudget_budg_dict.json` to avoid re-downloading.
+
+4. The BUDG dictionary begins from 2022, creating an apparent 2021 data gap. However, querying the 2022 budget code with `year=2021` returns complete 2021 monthly data. This is documented in the script and handled automatically.
+
+**Status:** Data collection running (`scrapers/08_pit_revenue.py --years 2021 2022 2023 2024`). ~328 budget code × year combinations, ~1.5s per request = ~20 minutes estimated.
+
+**Output files:**
+- `data/raw/pit_revenue/<budgetCode>_<year>.csv` — raw per-hromada-year CSV (immutable)
+- `data/clean/pit_revenue/pit_hromada_month.csv` — clean panel schema:
+  `hromada_code | hromada_name | oblast | budget_code | month | pit_total_uah`
+
+---
+
 ## Summary Table
 
-| Source | Goal | Outcome | In Panel? |
-|--------|------|---------|-----------|
-| ACLED (bulk xlsx) | Conflict events/fatalities by raion-month | **Complete** — 42,190 rows, 2021–2024, 3 oblasts | Pending processing |
-| ACLED Infrastructure Tags (xlsx) | Infrastructure damage type by raion-month | **Complete** — 3,800 rows, 2022–2026, 3 oblasts | Pending processing |
-| Jooble (Wayback) | Job postings by oblast-month (historical) | **9 national data points** (2021–2024); no oblast split | Yes (national control) |
-| Work.ua | Job postings by oblast-month (historical) | Current snapshot only (SPA) | No |
-| Robota.ua | Job postings by oblast-month (historical) | Current snapshot only (SPA) | No |
-| OpenDataBot | Business registrations by oblast-month | Failed (Nuxt.js SPA, fake data) | No |
-| EDR / data.gov.ua | Business registrations by oblast-month | National totals only (no ADDRESS field) | Yes (national control) |
-| HDX / IOM DTM | IDP displacement by oblast-month | Complete, Feb 2022–Jan 2026 | Yes |
-| Fulldata_City_Region_Monthly (possibleSets) | Multi-indicator panel | Primary housing prices: **complete 48 months, 3 oblasts**; salaries: post-2022 only; conflict counts: inferior to ACLED xlsx | Partial — `prim_price_usd_m2` pending extraction |
-| LUN.ua stat API | Primary market prices by class, rental prices | **Complete** — 47/48 months × 3 oblasts from Jan 2021; rental + room-count breakdown from May 2023 | `prim_price_usd_m2_avg` pending panel merge |
-
+| # | Source | Goal | Outcome | In Panel? |
+|---|--------|------|---------|-----------|
+| 1 | ACLED (bulk xlsx) | Conflict events/fatalities by raion-month | **Complete** — 42,190 rows, 2021–2024, 3 oblasts | Pending processing |
+| 1 | ACLED Infrastructure Tags (xlsx) | Infrastructure damage type by raion-month | **Complete** — 3,800 rows, 2022–2026, 3 oblasts | Pending processing |
+| 2 | Jooble (Wayback) | Job postings by oblast-month (historical) | **9 national data points** (2021–2024); no oblast split | Yes (national control) |
+| 3 | Work.ua | Job postings by oblast-month (historical) | Current snapshot only (SPA) | No |
+| 3 | Robota.ua | Job postings by oblast-month (historical) | Current snapshot only (SPA) | No |
+| 4 | OpenDataBot | Business registrations by oblast-month | Failed (Nuxt.js SPA, fake data) | No |
+| 5 | EDR / data.gov.ua | Business registrations by oblast-month | National totals only (no ADDRESS field) | Yes (national control) |
+| 6 | HDX / IOM DTM | IDP displacement by oblast-month | Complete, Feb 2022–Jan 2026 | Yes |
+| 7 | Fulldata_City_Region_Monthly (possibleSets) | Multi-indicator panel | Primary housing prices: **complete 48 months, 3 oblasts**; salaries: post-2022 only; conflict counts: inferior to ACLED xlsx | Partial — `prim_price_usd_m2` pending extraction |
+| 8 | LUN.ua stat API | Primary market prices by class, rental prices | **Complete** — 47/48 months × 3 oblasts from Jan 2021; rental + room-count breakdown from May 2023 | `prim_price_usd_m2_avg` pending panel merge |
+| 9 | `acled_work_imo.xlsx` (class dataset) | Pre-merged ACLED + labor + IDP panel, oblast × sector × month | **Complete** — 34,800 rows, 25 oblasts, Jan 2021–Dec 2024; **historical job posting counts and salaries by sector** unavailable from project scrapers | Pending: aggregate to oblast × month and merge salary + posting variables |
+| 10 | `primary market data.xlsx` (class dataset) | Primary market housing prices, extended history | **Complete** — 22 cities, Jan 2014–Jun 2025; extends LUN.ua scrape back to 2014 | Supplement for pre-2021 trend/placebo analysis |
+| 11 | `secondary market data.xlsx` (class dataset) | Secondary market listed/sold prices + rental by room count | **Partial** — 22 cities, May 2023–Jul 2025 only; no pre-war baseline | Supplementary post-war outcome variables |
+| 12 | SSSU Consumer Prices (Ukrstat, class dataset) | Oblast-level consumer prices and CPI | **Complete** — all 3 target oblasts, 2,446 product series, monthly from 2017; **only source with oblast-level price data for Kharkiv and Chernihiv** | Pending: extract food basket index as outcome variable and deflator |
 ---
 
 ## Methodology: How the Data Was Scraped
@@ -350,3 +556,12 @@ The final panel is assembled in four steps:
 4. **ACLED stubs:** `conflict_events`, `fatalities`, `shelling_events` are added as `NaN` columns pending API activation.
 
 Output: `data/final/panel/panel_oblast_month.csv` (144 rows × 12 columns) and `data/final/panel/panel_metadata.txt`.
+
+### openbudget.gov.ua (`scrapers/08_pit_revenue.py`)
+Two-phase process:
+
+**Phase 1 — Budget code discovery:** Downloads the full BUDG dictionary (`GET /items/BUDG`) and caches it at `data/raw/_cache/openbudget_budg_dict.json` (~180 MB, 217K entries). Filters to KATOTTG prefixes `UA59` (Sumy), `UA63` (Kharkiv), `UA74` (Chernihiv) and selects entries where `signBudg` contains `(g)` — identifying hromada self-governance budgets. Deduplicates by `codebudg` to get one entry per unique hromada budget code per year range.
+
+**Phase 2 — PIT income download:** For each unique (budget code, year) pair, calls `GET /api/public/localBudgetData?budgetCode=<code>&budgetItem=INCOMES&period=MONTH&year=<YYYY>`. Filters response to rows where `COD_INCO` starts with `11010` (all PIT sub-codes) and `FUND_TYP == 'C'` (general fund). Sums `FAKT_AMT` by month. Saves raw CSV to `data/raw/pit_revenue/` (immutable cache). Assembles clean hromada × month panel in `data/clean/pit_revenue/pit_hromada_month.csv`.
+
+**2021 data gap workaround:** The BUDG dictionary only contains budget codes from 2022 onward. However, querying the API with a 2022 budget code and `year=2021` successfully returns 2021 monthly data. The script automatically extends 2022 codes to also cover 2021 queries.
